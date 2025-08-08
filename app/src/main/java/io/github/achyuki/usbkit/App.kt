@@ -2,6 +2,7 @@ package io.github.achyuki.usbkit
 
 import android.app.Application
 
+val TAG: String = "USBKIT"
 lateinit var appContext: Application
 
 class App : Application() {

@@ -47,7 +47,7 @@ fun StorageScreen(navigator: DestinationsNavigator) {
 @Composable
 private fun TopBar(navigator: DestinationsNavigator, scrollBehavior: TopAppBarScrollBehavior) {
     TopAppBar(
-        title = { Text(stringResource(R.string.app_name)) },
+        title = { Text(stringResource(R.string.storage)) },
         actions = {
             IconButton(onClick = {
                 // ...

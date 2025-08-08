@@ -24,6 +24,7 @@ import com.ramcosta.composedestinations.utils.isRouteOnBackStackAsState
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import io.github.achyuki.usbkit.ui.screen.BottomBarDestination
 import io.github.achyuki.usbkit.ui.theme.AppTheme
+import io.github.achyuki.usbkit.util.ShellUtil
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +58,7 @@ fun BottomBar(navController: NavHostController) {
     val navigator = navController.rememberDestinationsNavigator()
     NavigationBar {
         BottomBarDestination.entries.filter {
-            !it.rootRequired || RootUtil.isRoot
+            !it.rootRequired || ShellUtil.isInitialized // Auto-update UI on changes
         }.forEach { destination ->
             val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(
                 destination.direction
