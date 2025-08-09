@@ -6,47 +6,53 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import android.os.Process
 import android.os.RemoteException
+import android.util.Log
 import com.topjohnwu.superuser.NoShellException
+import com.topjohnwu.superuser.Shell
 import com.topjohnwu.superuser.ipc.RootService
 import com.topjohnwu.superuser.nio.FileSystemManager
 import io.github.achyuki.usbkit.IRootService
+import io.github.achyuki.usbkit.TAG
 import io.github.achyuki.usbkit.appContext
-import io.github.achyuki.usbkit.util.ShellUtil
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 object RemoteFileSystemService {
-    @Synchronized
-    fun getRemoteFileSystemManager(): FileSystemManager = try {
-        runBlocking {
-            try {
-                withTimeout(ShellUtil.TIMEOUT_MS) {
-                    try {
-                        ShellUtil.getShell()
-                    } catch (e: NoShellException) {
-                        RemoteFileSystemException(e)
-                    }
+    private val mutex = Mutex()
+    private const val TIMEOUT_MS = 10000L
+    private var remoteFileSystemManagerCached: FileSystemManager? = null
 
+    suspend fun getRemoteFileSystemManager(): FileSystemManager = mutex.withLock {
+        remoteFileSystemManagerCached ?: withContext(Dispatchers.IO) {
+            try {
+                withTimeout(TIMEOUT_MS) {
+                    try {
+                        Shell.getShell()
+                    } catch (e: NoShellException) {
+                        throw RemoteFileSystemException(e)
+                    }
                     suspendCancellableCoroutine { continuation ->
                         val serviceConnection = object : ServiceConnection {
                             override fun onServiceConnected(name: ComponentName, service: IBinder) {
+                                Log.i(TAG, "RFS service connected")
                                 val ipc = IRootService.Stub.asInterface(service)
                                 try {
                                     val binder = ipc.getFileSystemService()
-                                    val remoteFS = FileSystemManager.getRemote(binder)
-                                    continuation.resume(remoteFS)
+                                    remoteFileSystemManagerCached =
+                                        FileSystemManager.getRemote(binder)
+                                    continuation.resume(remoteFileSystemManagerCached!!)
                                 } catch (e: RemoteException) {
-                                    RemoteFileSystemException(e)
+                                    continuation.resumeWithException(
+                                        RemoteFileSystemException(e)
+                                    )
                                 }
                             }
 
                             override fun onServiceDisconnected(name: ComponentName) {
+                                remoteFileSystemManagerCached = null
                                 if (continuation.isActive) {
                                     continuation.resumeWithException(
                                         RemoteFileSystemException(
@@ -57,6 +63,7 @@ object RemoteFileSystemService {
                             }
 
                             override fun onBindingDied(name: ComponentName) {
+                                remoteFileSystemManagerCached = null
                                 if (continuation.isActive) {
                                     continuation.resumeWithException(
                                         RemoteFileSystemException("RFS binding died")
@@ -65,6 +72,7 @@ object RemoteFileSystemService {
                             }
 
                             override fun onNullBinding(name: ComponentName) {
+                                remoteFileSystemManagerCached = null
                                 if (continuation.isActive) {
                                     continuation.resumeWithException(
                                         RemoteFileSystemException("RFS binding is null")
@@ -75,6 +83,7 @@ object RemoteFileSystemService {
                         launch(Dispatchers.Main.immediate) {
                             val intent = Intent(appContext, AIDLService::class.java)
                             RootService.bind(intent, serviceConnection)
+                            Log.i(TAG, "RFS service init")
                             continuation.invokeOnCancellation {
                                 launch(Dispatchers.Main.immediate) {
                                     RootService.unbind(serviceConnection)
@@ -87,8 +96,6 @@ object RemoteFileSystemService {
                 throw RemoteFileSystemException(e)
             }
         }
-    } catch (e: InterruptedException) {
-        throw RemoteFileSystemException(e)
     }
 
     private class AIDLService : RootService() {

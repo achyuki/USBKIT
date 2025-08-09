@@ -6,7 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -63,4 +63,10 @@ private fun TopBar(navigator: DestinationsNavigator, scrollBehavior: TopAppBarSc
         ),
         scrollBehavior = scrollBehavior
     )
+}
+
+private sealed class ScreenState {
+    object Loading : ScreenState()
+    data class Success(val data: String) : ScreenState()
+    data class Error(val message: String) : ScreenState()
 }

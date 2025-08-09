@@ -5,15 +5,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
@@ -27,6 +21,8 @@ import io.github.achyuki.usbkit.ui.theme.AppTheme
 import io.github.achyuki.usbkit.util.ShellUtil
 
 class MainActivity : ComponentActivity() {
+    var hasRoot by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -38,6 +34,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 val navController = rememberNavController()
+                LaunchedEffect(Unit) {
+                    hasRoot = ShellUtil.hasRoot()
+                }
                 Scaffold(
                     bottomBar = { BottomBar(navController) },
                     contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -51,49 +50,49 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
-@Composable
-fun BottomBar(navController: NavHostController) {
-    val navigator = navController.rememberDestinationsNavigator()
-    NavigationBar {
-        BottomBarDestination.entries.filter {
-            !it.rootRequired || ShellUtil.isInitialized // Auto-update UI on changes
-        }.forEach { destination ->
-            val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(
-                destination.direction
-            )
-            NavigationBarItem(
-                selected = isCurrentDestOnBackStack,
-                onClick = {
-                    if (isCurrentDestOnBackStack) {
-                        navigator.popBackStack(destination.direction, false)
-                        return@NavigationBarItem
-                    }
-
-                    navigator.navigate(destination.direction) {
-                        popUpTo(NavGraphs.root) {
-                            saveState = true
+    @Composable
+    fun BottomBar(navController: NavHostController) {
+        val navigator = navController.rememberDestinationsNavigator()
+        NavigationBar {
+            BottomBarDestination.entries.filter {
+                !it.rootRequired || hasRoot
+            }.forEach { destination ->
+                val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(
+                    destination.direction
+                )
+                NavigationBarItem(
+                    selected = isCurrentDestOnBackStack,
+                    onClick = {
+                        if (isCurrentDestOnBackStack) {
+                            navigator.popBackStack(destination.direction, false)
+                            return@NavigationBarItem
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                icon = {
-                    if (isCurrentDestOnBackStack) {
-                        Icon(
-                            destination.iconSelected,
-                            contentDescription = stringResource(destination.label)
-                        )
-                    } else {
-                        Icon(
-                            destination.iconNotSelected,
-                            contentDescription = stringResource(destination.label)
-                        )
-                    }
-                },
-                label = { Text(stringResource(destination.label)) }
-            )
+
+                        navigator.navigate(destination.direction) {
+                            popUpTo(NavGraphs.root) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = {
+                        if (isCurrentDestOnBackStack) {
+                            Icon(
+                                destination.iconSelected,
+                                contentDescription = stringResource(destination.label)
+                            )
+                        } else {
+                            Icon(
+                                destination.iconNotSelected,
+                                contentDescription = stringResource(destination.label)
+                            )
+                        }
+                    },
+                    label = { Text(stringResource(destination.label)) }
+                )
+            }
         }
     }
 }
