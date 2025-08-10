@@ -13,15 +13,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
-import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestination
-import com.ramcosta.composedestinations.generated.destinations.SettingScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import io.github.achyuki.usbkit.R
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Destination<RootGraph>(start = true)
+@Destination<RootGraph>
 @Composable
-fun HomeScreen(navigator: DestinationsNavigator) {
+fun SettingScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
@@ -49,16 +47,10 @@ fun HomeScreen(navigator: DestinationsNavigator) {
 @Composable
 private fun TopBar(navigator: DestinationsNavigator, scrollBehavior: TopAppBarScrollBehavior) {
     TopAppBar(
-        title = { Text(stringResource(R.string.app_name)) },
+        title = { Text(stringResource(R.string.settings)) },
         actions = {
             IconButton(onClick = {
-                navigator.navigate(SettingScreenDestination) {
-                    popUpTo(HomeScreenDestination) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
-                }
+                // ...
             }) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
@@ -71,10 +63,4 @@ private fun TopBar(navigator: DestinationsNavigator, scrollBehavior: TopAppBarSc
         ),
         scrollBehavior = scrollBehavior
     )
-}
-
-private sealed class ScreenState {
-    object Loading : ScreenState()
-    data class Success(val data: String) : ScreenState()
-    data class Error(val message: String) : ScreenState()
 }

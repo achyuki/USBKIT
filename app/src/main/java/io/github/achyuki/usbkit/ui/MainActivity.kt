@@ -10,11 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.generated.NavGraphs
-import com.ramcosta.composedestinations.utils.isRouteOnBackStackAsState
+import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestination
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import io.github.achyuki.usbkit.ui.screen.BottomBarDestination
 import io.github.achyuki.usbkit.ui.theme.AppTheme
@@ -54,23 +56,27 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun BottomBar(navController: NavHostController) {
         val navigator = navController.rememberDestinationsNavigator()
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val lastBottomBarDest = remember(navBackStackEntry) {
+            navController.currentBackStack.value
+                .reversed()
+                .firstNotNullOfOrNull { entry: NavBackStackEntry ->
+                    BottomBarDestination.entries.find { destination ->
+                        entry.destination.route == destination.direction.route
+                    }
+                }
+        }
+
         NavigationBar {
             BottomBarDestination.entries.filter {
                 !it.rootRequired || hasRoot
             }.forEach { destination ->
-                val isCurrentDestOnBackStack by navController.isRouteOnBackStackAsState(
-                    destination.direction
-                )
+                val isSelected = lastBottomBarDest == destination
                 NavigationBarItem(
-                    selected = isCurrentDestOnBackStack,
+                    selected = isSelected,
                     onClick = {
-                        if (isCurrentDestOnBackStack) {
-                            navigator.popBackStack(destination.direction, false)
-                            return@NavigationBarItem
-                        }
-
                         navigator.navigate(destination.direction) {
-                            popUpTo(NavGraphs.root) {
+                            popUpTo(HomeScreenDestination) {
                                 saveState = true
                             }
                             launchSingleTop = true
@@ -78,7 +84,7 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     icon = {
-                        if (isCurrentDestOnBackStack) {
+                        if (isSelected) {
                             Icon(
                                 destination.iconSelected,
                                 contentDescription = stringResource(destination.label)
@@ -90,7 +96,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     },
-                    label = { Text(stringResource(destination.label)) }
+                    label = { Text(stringResource(destination.label)) },
+                    alwaysShowLabel = false
                 )
             }
         }
