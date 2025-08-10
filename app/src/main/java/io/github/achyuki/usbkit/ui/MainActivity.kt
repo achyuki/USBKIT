@@ -23,7 +23,7 @@ import io.github.achyuki.usbkit.ui.theme.AppTheme
 import io.github.achyuki.usbkit.util.ShellUtil
 
 class MainActivity : ComponentActivity() {
-    var hasRoot by mutableStateOf(false)
+    private var hasRoot by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
