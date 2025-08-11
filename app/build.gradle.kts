@@ -44,10 +44,10 @@ android {
 dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.navigation.compose)
 
     implementation(libs.compose.destinations.core)
     ksp(libs.compose.destinations.ksp)
+    implementation(libs.compose.preference)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)

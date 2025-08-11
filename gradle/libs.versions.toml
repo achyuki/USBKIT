@@ -4,18 +4,18 @@ kotlin = "2.2.0"
 ksp = "2.2.0-2.0.2"
 activity = "1.10.1"
 lifecycle = "2.9.2"
-navigation = "2.9.3"
 destination = "2.2.0"
+preference = "2.1.0"
 composeBom = "2025.07.00"
 libsu = "6.0.0"
 
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
-androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 
 compose-destinations-core = { group = "io.github.raamcosta.compose-destinations", name = "core", version.ref = "destination" }
 compose-destinations-ksp = { group = "io.github.raamcosta.compose-destinations", name = "ksp", version.ref = "destination" }
+compose-preference = { group = "me.zhanghai.compose.preference", name = "preference", version.ref = "preference" }
 
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }

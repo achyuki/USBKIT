@@ -25,7 +25,6 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.topjohnwu.superuser.nio.FileSystemManager
 import io.github.achyuki.usbkit.R
 import io.github.achyuki.usbkit.service.RemoteFileSystemService
 
@@ -38,6 +37,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(Unit) {
+        screenState = ScreenState.Loading
         try {
             val remoteFS = RemoteFileSystemService.getRemoteFileSystemManager()
             screenState = ScreenState.Success(remoteFS)
@@ -192,7 +192,7 @@ private fun InfoCard(option: String? = null) {
             @Composable
             fun InfoCardItem(key: String, value: String) {
                 Column {
-                    Text(text = key, style = MaterialTheme.typography.bodyLarge)
+                    Text(text = key, style = MaterialTheme.typography.titleMedium)
                     Text(text = value, style = MaterialTheme.typography.bodyMedium)
                 }
             }
@@ -211,22 +211,23 @@ private fun InfoCard(option: String? = null) {
 }
 
 @Composable
-fun AboutCard() {
+private fun AboutCard() {
     val uriHandler = LocalUriHandler.current
+    val url = stringResource(R.string.repo_url)
 
     ElevatedCard {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-                    uriHandler.openUri(stringResource(R.string.repo_url))
+                    uriHandler.openUri(url)
                 }
                 .padding(24.dp)
         ) {
             Column {
                 Text(
                     text = "About",
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
@@ -236,10 +237,4 @@ fun AboutCard() {
             }
         }
     }
-}
-
-private sealed class ScreenState {
-    object Loading : ScreenState()
-    data class Success(val remoteFS: FileSystemManager) : ScreenState()
-    data class Error(val message: String) : ScreenState()
 }

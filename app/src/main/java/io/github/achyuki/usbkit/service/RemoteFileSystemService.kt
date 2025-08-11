@@ -41,9 +41,9 @@ object RemoteFileSystemService {
                                 val ipc = IRootService.Stub.asInterface(service)
                                 try {
                                     val binder = ipc.getFileSystemService()
-                                    remoteFileSystemManagerCached =
-                                        FileSystemManager.getRemote(binder)
-                                    continuation.resume(remoteFileSystemManagerCached!!)
+                                    val update = FileSystemManager.getRemote(binder)
+                                    remoteFileSystemManagerCached = update
+                                    continuation.resume(update)
                                 } catch (e: RemoteException) {
                                     continuation.resumeWithException(
                                         RemoteFileSystemException(e)
