@@ -60,15 +60,21 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 }
             }
             is ScreenState.Success -> {
-                val preferenceFlow = createCustomPreferenceFlow(object : PreferenceListener {
-                    override fun onRead(key: String, ref: Ref<Any>) {
-                        Log.e(TAG, "read $key")
+                val listener = remember {
+                    @Suppress("UNCHECKED_CAST")
+                    object : PreferenceListener {
+                        override fun <T> onRead(key: String, ref: Ref<T>) {
+                            if (key == "test1") ref.value = true as T
+                            Log.e(TAG, "read $key")
+                        }
+                        override fun <T> onWrite(key: String, ref: Ref<T>): Boolean {
+                            if (key == "test2") return false
+                            Log.e(TAG, "write $key")
+                            return true // Allow write
+                        }
                     }
-                    override fun onWrite(key: String, ref: Ref<Any>): Boolean {
-                        Log.e(TAG, "write $key")
-                        return true // Allow write
-                    }
-                })
+                }
+                val preferenceFlow = createCustomPreferenceFlow(listener)
 
                 ProvidePreferenceLocals(
                     flow = preferenceFlow
@@ -103,7 +109,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                             icon = {
                                 Icon(imageVector = Icons.Outlined.Info, contentDescription = null)
                             },
-                            summary = { Text(text = if (it) "On" else "Off") }
+                            summary = { Text(text = "Test3") }
                         )
                         switchPreference(
                             key = "test4",

@@ -1,18 +1,21 @@
 package io.github.achyuki.usbkit.ui.component
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import io.github.achyuki.usbkit.TAG
 import io.github.achyuki.usbkit.util.Ref
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.drop
 import me.zhanghai.compose.preference.MapPreferences
+import me.zhanghai.compose.preference.MutablePreferences
 import me.zhanghai.compose.preference.Preferences
 
 interface PreferenceListener {
-    fun onRead(key: String, ref: Ref<Any>)
-    fun onWrite(key: String, ref: Ref<Any>): Boolean
+    fun <T> onRead(key: String, ref: Ref<T>)
+    fun <T> onWrite(key: String, ref: Ref<T>): Boolean
 }
 
 @Composable
@@ -20,6 +23,7 @@ fun createCustomPreferenceFlow(
     listener: PreferenceListener? = null
 ): MutableStateFlow<Preferences> {
     val context = LocalContext.current
+    lateinit var test: MutableStateFlow<Preferences>
 
     @Suppress("DEPRECATION")
     val sharedPreferences =
@@ -32,38 +36,29 @@ fun createCustomPreferenceFlow(
         mutableStateOf<Preferences>(sharedPreferences.preferences)
     }
 
-    fun applyRead(original: Preferences): Preferences {
-        if (listener == null) return original
-        return MapPreferences(
-            original.asMap().mapValues { (key, value) ->
-                val valueRef = Ref(value)
-                listener.onRead(key, valueRef)
-                valueRef.value
+    var preferencesWarp = remember(preferences) {
+        if (listener != null) {
+            PipePreferences(preferences, listener)
+        } else {
+            preferences
+        }
+    }
+
+    fun writeFilter(original: Preferences): Preferences {
+        val map =
+            original.asMap().filter { (key, value) ->
+                value != preferences[key]
             }
-        )
+        return MapPreferences(map)
     }
 
-    fun applyWrite(original: Preferences): Preferences {
-        val oldMap = preferences.asMap()
-        return MapPreferences(
-            original.asMap().mapNotNull { (key, value) ->
-                if (value == oldMap[key]) return@mapNotNull null
-                if (listener == null)return@mapNotNull key to value
-                val valueRef = Ref(value)
-                if (listener.onWrite(key, valueRef))return@mapNotNull key to valueRef.value
-                null
-            }.toMap()
-        )
-    }
-
-    return MutableStateFlow(applyRead(preferences)).also {
+    return MutableStateFlow(preferencesWarp).also {
         LaunchedEffect(it) {
             withContext(Dispatchers.Main.immediate) {
                 it.drop(1).collect {
-                    val update = applyWrite(it)
-                    preferences =
-                        MapPreferences(preferences.asMap() + update.asMap()) as Preferences
-                    sharedPreferences.preferences = update
+                    val filter = writeFilter(it)
+                    preferences = MapPreferences(it.asMap())
+                    sharedPreferences.preferences = filter
                 }
             }
         }
@@ -77,6 +72,7 @@ private var SharedPreferences.preferences: Preferences
     set(value) {
         edit().apply {
             for ((key, mapValue) in value.asMap()) {
+                Log.d(TAG, "SP write $key: $mapValue")
                 when (mapValue) {
                     is Boolean -> putBoolean(key, mapValue)
                     is Int -> putInt(key, mapValue)
@@ -91,3 +87,41 @@ private var SharedPreferences.preferences: Preferences
             apply()
         }
     }
+
+private class PipePreferences(
+    private val preferences: Preferences,
+    private val listener: PreferenceListener
+) : Preferences {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> get(key: String): T? {
+        var valueCache = preferences[key] as T?
+        val valueRef = Ref(valueCache)
+        listener.onRead(key, valueRef)
+        return valueRef.value
+    }
+
+    override fun asMap(): Map<String, Any> = preferences.asMap()
+
+    override fun toMutablePreferences(): MutablePreferences =
+        MutablePipePreferences(preferences.toMutablePreferences(), listener)
+}
+
+private class MutablePipePreferences(
+    private val mutablePreferences: MutablePreferences,
+    private val listener: PreferenceListener
+) : MutablePreferences {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> get(key: String): T? = mutablePreferences[key] as T?
+
+    override fun asMap(): Map<String, Any> = mutablePreferences.asMap()
+
+    override fun toMutablePreferences(): MutablePreferences = this
+
+    override fun <T> set(key: String, value: T?) {
+        var valueCache = value
+        val valueRef = Ref(valueCache)
+        if (listener.onWrite(key, valueRef)) mutablePreferences[key] = valueRef.value
+    }
+
+    override fun clear() = mutablePreferences.clear()
+}
