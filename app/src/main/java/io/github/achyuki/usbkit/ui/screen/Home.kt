@@ -27,6 +27,7 @@ import com.ramcosta.composedestinations.generated.destinations.SettingScreenDest
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import io.github.achyuki.usbkit.R
 import io.github.achyuki.usbkit.service.RemoteFileSystemService
+import io.github.achyuki.usbkit.util.kernelConfig
 
 private var screenState by mutableStateOf<ScreenState>(ScreenState.Loading)
 
@@ -94,7 +95,8 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                             restoreState = true
                         }
                     }
-                    InfoCard("Enable")
+
+                    InfoCard(kernelConfig ?: emptyMap())
                 }
                 is ScreenState.Error -> {
                     StatusCard(
@@ -103,7 +105,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                         title = "Init Failed",
                         desc = "${state.message}"
                     )
-                    InfoCard("Unknown")
+                    InfoCard(emptyMap())
                 }
             }
             AboutCard()
@@ -181,13 +183,13 @@ private fun StatusCard(
 }
 
 @Composable
-private fun InfoCard(option: String? = null) {
+private fun InfoCard(kernelConfig: Map<String, String>? = null) {
     ElevatedCard {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             @Composable
             fun InfoCardItem(key: String, value: String) {
@@ -199,12 +201,27 @@ private fun InfoCard(option: String? = null) {
 
             InfoCardItem("Kernel Release", Os.uname().release)
             InfoCardItem("System Fingerprint", Build.FINGERPRINT)
-            if (option != null) {
-                InfoCardItem("Kernel Option", option)
-                InfoCardItem("Kernel Option", option)
-                InfoCardItem("Kernel Option", option)
-                InfoCardItem("Kernel Option", option)
-                InfoCardItem("Kernel Option", option)
+            if (kernelConfig != null) {
+                val optionList = listOf(
+                    "Libcomposite" to "CONFIG_USB_LIBCOMPOSITE",
+                    "Configfs" to "CONFIG_USB_CONFIGFS",
+                    "Configfs Functionfs" to "CONFIG_USB_CONFIGFS_F_FS",
+                    "Configfs Mass Storage" to "CONFIG_USB_CONFIGFS_MASS_STORAGE",
+                    "Configfs HID" to "CONFIG_USB_CONFIGFS_F_HID",
+                    "Configfs RNDIS" to "CONFIG_USB_CONFIGFS_RNDIS",
+                    "Configfs UVC" to "CONFIG_USB_CONFIGFS_F_UVC",
+                    "Configfs UAC2" to "CONFIG_USB_CONFIGFS_F_UAC2",
+                    "OTG" to "CONFIG_USB_OTG"
+                )
+                for (option in optionList) {
+                    val (name, optionName) = option
+                    val state = when {
+                        kernelConfig[optionName] == "y" -> "Support"
+                        kernelConfig.size > 0 -> "Not Support"
+                        else -> "Unknow"
+                    }
+                    InfoCardItem(name, state)
+                }
             }
         }
     }

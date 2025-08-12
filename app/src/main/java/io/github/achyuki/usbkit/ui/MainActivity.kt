@@ -20,10 +20,10 @@ import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestina
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import io.github.achyuki.usbkit.ui.screen.BottomBarDestination
 import io.github.achyuki.usbkit.ui.theme.AppTheme
-import io.github.achyuki.usbkit.util.ShellUtil
+import io.github.achyuki.usbkit.util.hasRoot
 
 class MainActivity : ComponentActivity() {
-    private var hasRoot by mutableStateOf(false)
+    private var hasRootState by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
             AppTheme {
                 val navController = rememberNavController()
                 LaunchedEffect(Unit) {
-                    hasRoot = ShellUtil.hasRoot()
+                    hasRootState = hasRoot
                 }
                 Scaffold(
                     bottomBar = { BottomBar(navController) },
@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
 
         NavigationBar {
             BottomBarDestination.entries.filter {
-                !it.rootRequired || hasRoot
+                !it.rootRequired || hasRootState
             }.forEach { destination ->
                 val isSelected = lastBottomBarDest == destination
                 NavigationBarItem(
