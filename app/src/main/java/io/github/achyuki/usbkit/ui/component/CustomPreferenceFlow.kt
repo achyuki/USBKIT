@@ -19,11 +19,9 @@ interface PreferenceListener {
 }
 
 @Composable
-fun createCustomPreferenceFlow(
-    listener: PreferenceListener? = null
-): MutableStateFlow<Preferences> {
+fun createCustomPreferenceFlow(listener: PreferenceListener): MutableStateFlow<Preferences> {
     val context = LocalContext.current
-    lateinit var test: MutableStateFlow<Preferences>
+    lateinit var preferenceFlow: MutableStateFlow<Preferences>
 
     @Suppress("DEPRECATION")
     val sharedPreferences =
@@ -32,37 +30,37 @@ fun createCustomPreferenceFlow(
                 context
             )
         }
-    var preferences by remember {
-        mutableStateOf<Preferences>(sharedPreferences.preferences)
+    var preferences = remember {
+        MutablePipePreferences(
+            sharedPreferences.preferences.toMutablePreferences(),
+            listener
+        ) as Preferences
     }
 
-    var preferencesWarp = remember(preferences) {
-        if (listener != null) {
-            PipePreferences(preferences, listener)
-        } else {
-            preferences
-        }
-    }
-
-    fun writeFilter(original: Preferences): Preferences {
-        val map =
-            original.asMap().filter { (key, value) ->
-                value != preferences[key]
-            }
-        return MapPreferences(map)
-    }
-
-    return MutableStateFlow(preferencesWarp).also {
+    preferenceFlow = MutableStateFlow(preferences).also {
         LaunchedEffect(it) {
             withContext(Dispatchers.Main.immediate) {
                 it.drop(1).collect {
-                    val filter = writeFilter(it)
-                    preferences = MapPreferences(it.asMap())
-                    sharedPreferences.preferences = filter
+                    val oldMap = preferences.asMap()
+                    val diffMap =
+                        it.asMap().filter { (key, value) ->
+                            value != oldMap[key]
+                        }
+                    if (diffMap.size > 0) {
+                        val update = MapPreferences(it.asMap())
+                        preferenceFlow.value =
+                            MutablePipePreferences(
+                                update.toMutablePreferences(),
+                                listener
+                            )
+                        preferences = update
+                        sharedPreferences.preferences = MapPreferences(diffMap)
+                    }
                 }
             }
         }
     }
+    return preferenceFlow
 }
 
 private var SharedPreferences.preferences: Preferences
@@ -88,34 +86,22 @@ private var SharedPreferences.preferences: Preferences
         }
     }
 
-private class PipePreferences(
-    private val preferences: Preferences,
-    private val listener: PreferenceListener
-) : Preferences {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T> get(key: String): T? {
-        var valueCache = preferences[key] as T?
-        val valueRef = Ref(valueCache)
-        listener.onRead(key, valueRef)
-        return valueRef.value
-    }
-
-    override fun asMap(): Map<String, Any> = preferences.asMap()
-
-    override fun toMutablePreferences(): MutablePreferences =
-        MutablePipePreferences(preferences.toMutablePreferences(), listener)
-}
-
 private class MutablePipePreferences(
     private val mutablePreferences: MutablePreferences,
     private val listener: PreferenceListener
 ) : MutablePreferences {
     @Suppress("UNCHECKED_CAST")
-    override fun <T> get(key: String): T? = mutablePreferences[key] as T?
+    override fun <T> get(key: String): T? {
+        var valueCache = mutablePreferences[key] as T?
+        val valueRef = Ref(valueCache)
+        listener.onRead(key, valueRef)
+        return valueRef.value
+    }
 
     override fun asMap(): Map<String, Any> = mutablePreferences.asMap()
 
-    override fun toMutablePreferences(): MutablePreferences = this
+    override fun toMutablePreferences(): MutablePreferences =
+        MutablePipePreferences(mutablePreferences, listener) // It's important
 
     override fun <T> set(key: String, value: T?) {
         var valueCache = value
