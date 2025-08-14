@@ -25,12 +25,8 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.topjohnwu.superuser.nio.FileSystemManager
 import io.github.achyuki.usbkit.R
-import io.github.achyuki.usbkit.service.RemoteFileSystemService
 import io.github.achyuki.usbkit.util.kernelConfig
-
-private var screenState by mutableStateOf<ScreenState<FileSystemManager>>(ScreenState.Loading)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>(start = true)
@@ -38,15 +34,7 @@ private var screenState by mutableStateOf<ScreenState<FileSystemManager>>(Screen
 fun HomeScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-    LaunchedEffect(Unit) {
-        screenState = ScreenState.Loading
-        try {
-            val remoteFS = RemoteFileSystemService.getRemoteFileSystemManager()
-            screenState = ScreenState.Success(remoteFS)
-        } catch (e: Exception) {
-            screenState = ScreenState.Error(e.message ?: "Unknown error")
-        }
-    }
+    loadScreen()
 
     Scaffold(
         topBar = {

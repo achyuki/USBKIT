@@ -5,6 +5,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +17,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.animations.NavHostAnimatedDestinationStyle
 import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestination
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
@@ -46,7 +49,25 @@ class MainActivity : ComponentActivity() {
                     DestinationsNavHost(
                         navController = navController,
                         navGraph = NavGraphs.root,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        defaultTransitions = object : NavHostAnimatedDestinationStyle() {
+                            override val enterTransition:
+                                AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
+                                    fadeIn(animationSpec = tween(340))
+                                }
+                            override val exitTransition:
+                                AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
+                                    fadeOut(animationSpec = tween(340))
+                                }
+                            override val popEnterTransition:
+                                AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
+                                    fadeIn(animationSpec = tween(340))
+                                }
+                            override val popExitTransition:
+                                AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
+                                    fadeOut(animationSpec = tween(340))
+                                }
+                        }
                     )
                 }
             }
