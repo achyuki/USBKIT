@@ -1,9 +1,7 @@
 package io.github.achyuki.usbkit.ui.screen
 
-import com.topjohnwu.superuser.nio.FileSystemManager
-
-sealed class ScreenState {
-    object Loading : ScreenState()
-    data class Success(val remoteFS: FileSystemManager) : ScreenState()
-    data class Error(val message: String) : ScreenState()
+sealed class ScreenState<out T> {
+    object Loading : ScreenState<Nothing>()
+    data class Success<out T>(val pack: T) : ScreenState<T>()
+    data class Error(val message: String) : ScreenState<Nothing>()
 }

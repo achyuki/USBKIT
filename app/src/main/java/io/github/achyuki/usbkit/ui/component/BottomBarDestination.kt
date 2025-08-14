@@ -1,4 +1,4 @@
-package io.github.achyuki.usbkit.ui.screen
+package io.github.achyuki.usbkit.ui.component
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns

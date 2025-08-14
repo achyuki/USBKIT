@@ -18,7 +18,7 @@ import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestination
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
-import io.github.achyuki.usbkit.ui.screen.BottomBarDestination
+import io.github.achyuki.usbkit.ui.component.BottomBarDestination
 import io.github.achyuki.usbkit.ui.theme.AppTheme
 import io.github.achyuki.usbkit.util.hasRoot
 

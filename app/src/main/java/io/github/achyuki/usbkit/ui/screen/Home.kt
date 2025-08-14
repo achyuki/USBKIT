@@ -25,11 +25,12 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.topjohnwu.superuser.nio.FileSystemManager
 import io.github.achyuki.usbkit.R
 import io.github.achyuki.usbkit.service.RemoteFileSystemService
 import io.github.achyuki.usbkit.util.kernelConfig
 
-private var screenState by mutableStateOf<ScreenState>(ScreenState.Loading)
+private var screenState by mutableStateOf<ScreenState<FileSystemManager>>(ScreenState.Loading)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>(start = true)

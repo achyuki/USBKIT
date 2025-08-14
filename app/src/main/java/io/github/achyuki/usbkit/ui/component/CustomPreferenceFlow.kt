@@ -21,46 +21,26 @@ interface PreferenceListener {
 @Composable
 fun createCustomPreferenceFlow(listener: PreferenceListener): MutableStateFlow<Preferences> {
     val context = LocalContext.current
-    lateinit var preferenceFlow: MutableStateFlow<Preferences>
 
     @Suppress("DEPRECATION")
     val sharedPreferences =
-        remember {
-            android.preference.PreferenceManager.getDefaultSharedPreferences(
-                context
-            )
-        }
-    var preferences = remember {
-        MutablePipePreferences(
-            sharedPreferences.preferences.toMutablePreferences(),
-            listener
-        ) as Preferences
-    }
+        android.preference.PreferenceManager.getDefaultSharedPreferences(
+            context
+        )
+    var preferences = MutablePipePreferences(
+        sharedPreferences.preferences.toMutablePreferences(),
+        listener
+    ) as Preferences
 
-    preferenceFlow = MutableStateFlow(preferences).also {
+    return MutableStateFlow(preferences).also {
         LaunchedEffect(it) {
             withContext(Dispatchers.Main.immediate) {
                 it.drop(1).collect {
-                    val oldMap = preferences.asMap()
-                    val diffMap =
-                        it.asMap().filter { (key, value) ->
-                            value != oldMap[key]
-                        }
-                    if (diffMap.size > 0) {
-                        val update = MapPreferences(it.asMap())
-                        preferenceFlow.value =
-                            MutablePipePreferences(
-                                update.toMutablePreferences(),
-                                listener
-                            )
-                        preferences = update
-                        sharedPreferences.preferences = MapPreferences(diffMap)
-                    }
+                    sharedPreferences.preferences = it
                 }
             }
         }
     }
-    return preferenceFlow
 }
 
 private var SharedPreferences.preferences: Preferences
@@ -70,7 +50,6 @@ private var SharedPreferences.preferences: Preferences
     set(value) {
         edit().apply {
             for ((key, mapValue) in value.asMap()) {
-                Log.d(TAG, "SP write $key: $mapValue")
                 when (mapValue) {
                     is Boolean -> putBoolean(key, mapValue)
                     is Int -> putInt(key, mapValue)
@@ -83,6 +62,7 @@ private var SharedPreferences.preferences: Preferences
                 }
             }
             apply()
+            Log.d(TAG, "SP apply ${value.asMap()}")
         }
     }
 
