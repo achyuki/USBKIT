@@ -5,11 +5,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.topjohnwu.superuser.nio.FileSystemManager
-import io.github.achyuki.usbkit.service.getRemoteFileSystemManager
+import io.github.achyuki.usbkit.service.RemoteFileSystemService
+import io.github.achyuki.usbkit.service.getRemoteFileSystemService
 import io.github.achyuki.usbkit.service.isRemoteFileSystemServiceAlive
 
-var screenState by mutableStateOf<ScreenState<FileSystemManager>>(ScreenState.Loading)
+var screenState by mutableStateOf<ScreenState<RemoteFileSystemService>>(ScreenState.Loading)
 
 sealed class ScreenState<out T> {
     object Loading : ScreenState<Nothing>()
@@ -23,7 +23,7 @@ fun loadScreen() {
     LaunchedEffect(Unit) {
         screenState = ScreenState.Loading
         try {
-            val remoteFS = getRemoteFileSystemManager()
+            val remoteFS = getRemoteFileSystemService()
             screenState = ScreenState.Success(remoteFS)
         } catch (e: Exception) {
             screenState = ScreenState.Error(e.message ?: "Unknown error")

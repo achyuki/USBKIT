@@ -69,12 +69,13 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                 }
                 is ScreenState.Success -> {
                     val remoteFS = state.pack
-                    val gadget = Gadget(remoteFS)
+                    val remoteFSM = remoteFS.manager
+                    val gadget = Gadget(remoteFSM)
                     val product = gadget.product ?: "Unknow"
                     val manufacturer = gadget.manufacturer ?: "Unknow"
                     val configNum = 1
                     val functionNum = 14
-                    val tt = remoteFS.getFile("/config/usb_gadget/g1/strings/0x409/product").newInputStream().readAllBytes().size
+                    val tt = remoteFS.readFileBytes("/config/usb_gadget/g1/strings/0x409/product").size
                     Log.e(TAG, "test $tt")
 
                     StatusCard(

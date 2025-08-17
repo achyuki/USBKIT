@@ -4,12 +4,12 @@ import com.topjohnwu.superuser.nio.FileSystemManager
 import io.github.achyuki.usbkit.ugc.*
 import io.github.achyuki.usbkit.util.suExec
 
-class Gadget(val remoteFS: FileSystemManager) {
-    val EF_GADGET = remoteFS.getFile(PATH_GADGET)
+class Gadget(val remoteFSM: FileSystemManager) {
+    val EF_GADGET = remoteFSM.getFile(PATH_GADGET)
     val EF_UDC = EF_GADGET.getChildFile("UDC")
-    val EF_CONFIG = getConfigEFile(remoteFS)
-    val EF_FUNCTION = remoteFS.getFile(PATH_FUNCTIONS)
-    val EF_STRING = getStringEFile(remoteFS)
+    val EF_CONFIG = getConfigEFile(remoteFSM)
+    val EF_FUNCTION = remoteFSM.getFile(PATH_FUNCTIONS)
+    val EF_STRING = getStringEFile(remoteFSM)
     val EF_PRODUCT = EF_STRING?.getChildFile("product")
     val EF_MANUFACTURER = EF_STRING?.getChildFile("manufacturer")
     var UDCEnable

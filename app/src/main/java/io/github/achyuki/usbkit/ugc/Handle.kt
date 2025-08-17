@@ -12,8 +12,8 @@ val PATH_CONFIGS get() = "$PATH_GADGET/configs"
 val PATH_STRINGS get() = "$PATH_GADGET/strings"
 
 fun getFirstChildEFile(file: ExtendedFile): ExtendedFile? = file.listFiles()?.firstOrNull()
-fun getConfigEFile(remoteFS: FileSystemManager): ExtendedFile? = getFirstChildEFile(remoteFS.getFile(PATH_CONFIGS))
-fun getStringEFile(remoteFS: FileSystemManager): ExtendedFile? = getFirstChildEFile(remoteFS.getFile(PATH_STRINGS))
+fun getConfigEFile(remoteFSM: FileSystemManager): ExtendedFile? = getFirstChildEFile(remoteFSM.getFile(PATH_CONFIGS))
+fun getStringEFile(remoteFSM: FileSystemManager): ExtendedFile? = getFirstChildEFile(remoteFSM.getFile(PATH_STRINGS))
 
 fun readEFileLine(file: ExtendedFile) = file.newInputStream().bufferedReader().use { it.readLine() }
 fun readEFileByte(file: ExtendedFile) = file.newInputStream().use { it.read() }
