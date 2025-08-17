@@ -11,7 +11,7 @@ private const val TIMEOUT_S = 10L
 
 class App : Application() {
     init {
-        Shell.enableVerboseLogging = BuildConfig.DEBUG
+        Shell.enableVerboseLogging = false // or BuildConfig.DEBUG
         Shell.setDefaultBuilder(
             Shell.Builder.create()
                 .setInitializers(ShellInitializer::class.java)

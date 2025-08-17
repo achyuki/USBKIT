@@ -2,6 +2,7 @@ package io.github.achyuki.usbkit.ui.screen
 
 import android.os.Build
 import android.system.Os
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,6 +27,9 @@ import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestina
 import com.ramcosta.composedestinations.generated.destinations.SettingScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import io.github.achyuki.usbkit.R
+import io.github.achyuki.usbkit.TAG
+import io.github.achyuki.usbkit.ugc.*
+import io.github.achyuki.usbkit.ugc.controller.Gadget
 import io.github.achyuki.usbkit.util.kernelConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,11 +68,14 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                     InfoCard()
                 }
                 is ScreenState.Success -> {
-                    // Test data
-                    val product = "2312DRAABC"
-                    val manufacturer = "Xiaomi"
+                    val remoteFS = state.pack
+                    val gadget = Gadget(remoteFS)
+                    val product = gadget.product ?: "Unknow"
+                    val manufacturer = gadget.manufacturer ?: "Unknow"
                     val configNum = 1
                     val functionNum = 14
+                    val tt = remoteFS.getFile("/config/usb_gadget/g1/strings/0x409/product").newInputStream().readAllBytes().size
+                    Log.e(TAG, "test $tt")
 
                     StatusCard(
                         color = MaterialTheme.colorScheme.primaryContainer,
@@ -85,7 +92,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                         }
                     }
 
-                    InfoCard(kernelConfig ?: emptyMap())
+                    InfoCard(kernelConfig)
                 }
                 is ScreenState.Error -> {
                     StatusCard(
@@ -132,13 +139,7 @@ private fun TopBar(navigator: DestinationsNavigator, scrollBehavior: TopAppBarSc
 }
 
 @Composable
-private fun StatusCard(
-    color: Color,
-    icon: ImageVector,
-    title: String,
-    desc: String,
-    onClick: () -> Unit = {}
-) {
+private fun StatusCard(color: Color, icon: ImageVector, title: String, desc: String, onClick: () -> Unit = {}) {
     ElevatedCard(
         colors = CardDefaults.elevatedCardColors(containerColor = color)
     ) {

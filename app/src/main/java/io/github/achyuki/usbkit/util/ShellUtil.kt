@@ -10,3 +10,5 @@ val hasRoot by lazy {
         false
     }
 }
+
+fun suExec(command: String): String = Shell.cmd(command).exec().getOut().joinToString("\n")

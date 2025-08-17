@@ -66,10 +66,8 @@ private var SharedPreferences.preferences: Preferences
         }
     }
 
-private class MutablePipePreferences(
-    private val mutablePreferences: MutablePreferences,
-    private val listener: PreferenceListener
-) : MutablePreferences {
+private class MutablePipePreferences(private val mutablePreferences: MutablePreferences, private val listener: PreferenceListener) :
+    MutablePreferences {
     @Suppress("UNCHECKED_CAST")
     override fun <T> get(key: String): T? {
         var valueCache = mutablePreferences[key] as T?
@@ -80,8 +78,7 @@ private class MutablePipePreferences(
 
     override fun asMap(): Map<String, Any> = mutablePreferences.asMap()
 
-    override fun toMutablePreferences(): MutablePreferences =
-        MutablePipePreferences(mutablePreferences, listener) // It's important
+    override fun toMutablePreferences(): MutablePreferences = MutablePipePreferences(mutablePreferences, listener) // It's important
 
     override fun <T> set(key: String, value: T?) {
         var valueCache = value
