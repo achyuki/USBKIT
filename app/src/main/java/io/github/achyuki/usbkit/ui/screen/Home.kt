@@ -30,7 +30,7 @@ import io.github.achyuki.usbkit.R
 import io.github.achyuki.usbkit.TAG
 import io.github.achyuki.usbkit.ugc.*
 import io.github.achyuki.usbkit.ugc.controller.Gadget
-import io.github.achyuki.usbkit.util.kernelConfig
+import io.github.achyuki.usbkit.util.getKernelConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>(start = true)
@@ -92,7 +92,13 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                             restoreState = true
                         }
                     }
-
+                    var kernelConfig: Map<String, String>? = null
+                    try {
+                        kernelConfig = getKernelConfig(remoteFS)
+                    } catch (e: Exception) {
+                        kernelConfig = emptyMap()
+                        e.message?.let { Log.e(TAG, it) }
+                    }
                     InfoCard(kernelConfig)
                 }
                 is ScreenState.Error -> {

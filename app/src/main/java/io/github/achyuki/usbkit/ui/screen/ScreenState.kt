@@ -1,10 +1,12 @@
 package io.github.achyuki.usbkit.ui.screen
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import io.github.achyuki.usbkit.TAG
 import io.github.achyuki.usbkit.service.RemoteFileSystemService
 import io.github.achyuki.usbkit.service.getRemoteFileSystemService
 import io.github.achyuki.usbkit.service.isRemoteFileSystemServiceAlive
@@ -27,6 +29,7 @@ fun loadScreen() {
             screenState = ScreenState.Success(remoteFS)
         } catch (e: Exception) {
             screenState = ScreenState.Error(e.message ?: "Unknown error")
+            e.message?.let { Log.e(TAG, it) }
         }
     }
 }
